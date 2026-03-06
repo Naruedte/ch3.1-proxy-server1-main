@@ -1,9 +1,4 @@
 const express = require('express');
-const cors = require('cors');
-const helmet = require('helmet');
-const morgan = require('morgan');
-const path = require('path');
-const fs = require('fs');
 const { PrismaClient } = require('@prisma/client');
 require('dotenv').config();
 
@@ -11,28 +6,27 @@ const app = express();
 const prisma = new PrismaClient();
 const PORT = process.env.PORT || 3000;
 
-// Middleware
-app.use(cors({
-  origin: '*', // Allow all for now to perfectly fix CORS
-  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization']
-}));
-app.use(helmet({ crossOriginResourcePolicy: { policy: 'cross-origin' } }));
-app.use(morgan('dev'));
-app.use(express.json());
+// Ultra-permissive CORS middleware
+app.use((req, res, next) => {
+  res.header('Access-Control-Allow-Origin', '*');
+  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE, OPTIONS');
+  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  
+  // Handle preflight
+  if (req.method === 'OPTIONS') {
+    return res.sendStatus(200);
+  }
+  next();
+});
 
-// Logs Dir
-const logsDir = path.join(__dirname, 'logs');
-if (!fs.existsSync(logsDir)) {
-  fs.mkdirSync(logsDir, { recursive: true });
-}
+app.use(express.json());
 
 // Routes
 app.get('/', (req, res) => {
   res.json({ 
     status: 'Live', 
-    message: 'Backend API is running correctly with Task routes',
-    version: '1.2.0'
+    message: 'Backend API is running correctly (Standardized Version)',
+    version: '1.3.0'
   });
 });
 
@@ -87,7 +81,7 @@ taskRouter.delete('/:id', async (req, res) => {
 
 app.use('/api/tasks', taskRouter);
 
-// Fallback
+// Fallback JSON 404
 app.use((req, res) => {
   res.status(404).json({ message: 'Route not found', path: req.originalUrl });
 });
