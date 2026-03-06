@@ -14,8 +14,26 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-app.use(cors());
-app.use(helmet());
+const allowedOrigins = [
+  'https://6604101342.netlify.app',
+  'http://localhost:9500',
+  'http://localhost:8080',
+];
+
+app.use(cors({
+  origin: (origin, callback) => {
+    // อนุญาต request ที่ไม่มี origin (เช่น curl, Postman) และ origin ที่อยู่ใน whitelist
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error(`CORS blocked: ${origin}`));
+    }
+  },
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  credentials: true,
+}));
+app.use(helmet({ crossOriginResourcePolicy: { policy: 'cross-origin' } }));
 app.use(morgan('dev'));
 app.use(express.json());
 
