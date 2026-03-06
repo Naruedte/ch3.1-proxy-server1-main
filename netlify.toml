@@ -1,0 +1,9 @@
+[build]
+  base    = "frontend"
+  command = "npm install && quasar build"
+  publish = "dist/spa"
+
+[[redirects]]
+  from   = "/*"
+  to     = "/index.html"
+  status = 200
