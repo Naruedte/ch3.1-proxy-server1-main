@@ -34,6 +34,14 @@ app.get('/api/health', (req, res) => {
   res.json({ ok: true });
 });
 
+app.get('/api/debug-cors', (req, res) => {
+  res.json({ 
+    message: 'CORS manual headers are active', 
+    headers: res.getHeaders(),
+    time: new Date().toISOString()
+  });
+});
+
 // Task API
 const taskRouter = express.Router();
 
