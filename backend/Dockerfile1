@@ -1,0 +1,49 @@
+# Stage 1: Build dependencies & Compilation
+FROM node:20-alpine AS builder
+
+WORKDIR /app
+
+COPY package*.json ./
+# Install ALL dependencies (including devDependencies for tsc)
+RUN npm ci
+
+COPY . .
+
+# Generate Prisma Client (Needed because npm ci ran before schema was copied)
+# We provide a dummy DATABASE_URL because prisma.config.ts requires it, 
+# but generation doesn't need a real connection.
+RUN DATABASE_URL="postgresql://dummy:dummy@localhost:5432/postgres" npx prisma generate
+
+# Build TypeScript code
+RUN npm run build
+
+# Prune dev dependencies to keep image small
+RUN npm prune --production
+
+# Stage 2: Production
+FROM node:20-alpine
+
+WORKDIR /app
+
+# Set ownership
+RUN chown -R node:node /app
+
+USER node
+
+# Copy production dependencies
+COPY --from=builder --chown=node:node /app/node_modules ./node_modules
+
+# Copy compiled code
+COPY --from=builder --chown=node:node /app/dist ./dist
+COPY --from=builder --chown=node:node /app/package.json ./
+
+# Ensure logs directory exists (optional, app creates it)
+# /app/logs should be writable by node user (if volume mounted correctly or created by app)
+
+# Healthcheck
+HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+  CMD wget --quiet --tries=1 --spider http://localhost:3000/api/demo || exit 1
+
+EXPOSE 3000
+
+CMD ["node", "dist/server.js"]

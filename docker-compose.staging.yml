@@ -1,0 +1,10 @@
+version: '3.9'
+
+services:
+  nginx:
+    ports:
+      - "8080:80" # Staging might run on a different port
+
+  backend:
+    environment:
+      - NODE_ENV=staging

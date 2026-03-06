@@ -1,0 +1,4 @@
+# DATABASE_URL="postgresql://postgres.mcujjebolmwtpdgrfadf:bv3Hz0dfvgnfALTT@aws-1-ap-northeast-1.pooler.supabase.com:5432/postgres" Migration
+DATABASE_URL="postgresql://postgres.mcujjebolmwtpdgrfadf:bv3Hz0dfvgnfALTT@aws-1-ap-northeast-1.pooler.supabase.com:5432/postgres"
+PORT=3000
+NODE_ENV=development
