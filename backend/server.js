@@ -1,15 +1,38 @@
-const express = require('express');
-const cors = require('cors');
-const fs = require('fs');
-const path = require('path');
-require('dotenv').config();
+// NOTE: This file is a fallback. The main entry is dist/server.js (compiled from src/server.ts)
+// Try to use the compiled version if available
+const distServer = require('path').join(__dirname, 'dist', 'server.js');
+if (require('fs').existsSync(distServer)) {
+  require(distServer);
+} else {
+  // Fallback: simple server with CORS
+  const express = require('express');
+  const cors = require('cors');
+  const fs = require('fs');
+  const path = require('path');
+  require('dotenv').config();
 
-const app = express();
-const PORT = process.env.PORT || 3000;
+  const app = express();
+  const PORT = process.env.PORT || 3000;
 
-// Middleware
-app.use(cors());  // อนุญาต cross-origin จาก frontend
-app.use(express.json());
+  const allowedOrigins = [
+    'https://6604101342.netlify.app',
+    'http://localhost:9500',
+    'http://localhost:8080',
+  ];
+
+  app.use(cors({
+    origin: (origin, callback) => {
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error(`CORS blocked: ${origin}`));
+      }
+    },
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
+    credentials: true,
+  }));
+  app.use(express.json());
 
 // สร้างโฟลเดอร์ logs ถ้ายังไม่มี (สำหรับ volume demo)
 const logsDir = path.join(__dirname, 'logs');
@@ -47,3 +70,4 @@ app.use((err, req, res, next) => {
 app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
 });
+}
